@@ -1,198 +1,206 @@
 class ARButton {
 
-	static createButton( renderer, sessionInit = {} ) {
+    static createButton(renderer, sessionInit = {}) {
 
-		const button = document.createElement( 'button' );
+        const button = document.createElement('button');
 
-		function showStartAR( /*device*/ ) {
+        function showStartAR( /*device*/) {
 
-			if ( sessionInit.domOverlay === undefined ) {
+            if (sessionInit.domOverlay === undefined) {
 
-				var overlay = document.createElement( 'div' );
-				overlay.style.display = 'none';
-				document.body.appendChild( overlay );
+                var overlay = document.createElement('div');
+                overlay.style.display = 'none';
+                document.body.appendChild(overlay);
 
-				var svg = document.createElementNS( 'http://www.w3.org/2000/svg', 'svg' );
-				svg.setAttribute( 'width', 38 );
-				svg.setAttribute( 'height', 38 );
-				svg.style.position = 'absolute';
-				svg.style.right = '20px';
-				svg.style.top = '20px';
-				svg.addEventListener( 'click', function () {
+                var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', 38);
+                svg.setAttribute('height', 38);
+                svg.style.position = 'absolute';
+                svg.style.right = '20px';
+                svg.style.top = '20px';
+                svg.addEventListener('click', function () {
 
-					currentSession.end();
+                    currentSession.end();
 
-				} );
-				overlay.appendChild( svg );
+                });
+                overlay.appendChild(svg);
 
-				var path = document.createElementNS( 'http://www.w3.org/2000/svg', 'path' );
-				path.setAttribute( 'd', 'M 12,12 L 28,28 M 28,12 12,28' );
-				path.setAttribute( 'stroke', '#fff' );
-				path.setAttribute( 'stroke-width', 2 );
-				svg.appendChild( path );
+                var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M 12,12 L 28,28 M 28,12 12,28');
+                path.setAttribute('stroke', '#fff');
+                path.setAttribute('stroke-width', 2);
+                svg.appendChild(path);
 
-				if ( sessionInit.optionalFeatures === undefined ) {
+                if (sessionInit.optionalFeatures === undefined) {
 
-					sessionInit.optionalFeatures = [];
+                    sessionInit.optionalFeatures = [];
 
-				}
+                }
 
-				sessionInit.optionalFeatures.push( 'dom-overlay' );
-				sessionInit.domOverlay = { root: overlay };
+                sessionInit.optionalFeatures.push('dom-overlay');
+                sessionInit.domOverlay = { root: overlay };
 
-			}
+            }
 
-			//
+            //
 
-			let currentSession = null;
+            let currentSession = null;
 
-			async function onSessionStarted( session ) {
+            async function onSessionStarted(session) {
 
-				session.addEventListener( 'end', onSessionEnded );
+                session.addEventListener('end', onSessionEnded);
 
-				renderer.xr.setReferenceSpaceType( 'local' );
+                renderer.xr.setReferenceSpaceType('local');
 
-				await renderer.xr.setSession( session );
+                await renderer.xr.setSession(session);
 
-				button.textContent = 'STOP AR';
-				sessionInit.domOverlay.root.style.display = '';
+                button.textContent = 'STOP AR';
+                sessionInit.domOverlay.root.style.display = '';
 
-				currentSession = session;
+                currentSession = session;
 
-			}
 
-			function onSessionEnded( /*event*/ ) {
+                let glCanvas = document.createElement("canvas");
+                let gl = glCanvas.getContext("webgl", { xrCompatible: true });
 
-				currentSession.removeEventListener( 'end', onSessionEnded );
+                // loadWebGLResources();
 
-				button.textContent = 'START AR';
-				sessionInit.domOverlay.root.style.display = 'none';
+                session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
 
-				currentSession = null;
+            }
 
-			}
+            function onSessionEnded( /*event*/) {
 
-			//
+                currentSession.removeEventListener('end', onSessionEnded);
 
-			button.style.display = '';
+                button.textContent = 'START AR';
+                sessionInit.domOverlay.root.style.display = 'none';
 
-			button.style.cursor = 'pointer';
-			button.style.left = 'calc(50% - 50px)';
-			button.style.width = '100px';
+                currentSession = null;
 
-			button.textContent = 'START AR';
+            }
 
-			button.onmouseenter = function () {
+            //
 
-				button.style.opacity = '1.0';
+            button.style.display = '';
 
-			};
+            button.style.cursor = 'pointer';
+            button.style.left = 'calc(50% - 50px)';
+            button.style.width = '100px';
 
-			button.onmouseleave = function () {
+            button.textContent = 'START AR';
 
-				button.style.opacity = '0.5';
+            button.onmouseenter = function () {
 
-			};
+                button.style.opacity = '1.0';
 
-			button.onclick = function () {
+            };
 
-				if ( currentSession === null ) {
+            button.onmouseleave = function () {
 
-					// navigator.xr.requestSession( 'immersive-ar', sessionInit ).then( onSessionStarted );
-                    navigator.xr.requestSession( 'inline', sessionInit ).then( onSessionStarted );
+                button.style.opacity = '0.5';
 
-				} else {
+            };
 
-					currentSession.end();
+            button.onclick = function () {
 
-				}
+                if (currentSession === null) {
 
-			};
+                    navigator.xr.requestSession('immersive-ar', sessionInit).then(onSessionStarted);
+                    // navigator.xr.requestSession( 'inline', sessionInit ).then( onSessionStarted );
 
-		}
+                } else {
 
-		function disableButton() {
+                    currentSession.end();
 
-			button.style.display = '';
+                }
 
-			button.style.cursor = 'auto';
-			button.style.left = 'calc(50% - 75px)';
-			button.style.width = '150px';
+            };
 
-			button.onmouseenter = null;
-			button.onmouseleave = null;
+        }
 
-			button.onclick = null;
+        function disableButton() {
 
-		}
+            button.style.display = '';
 
-		function showARNotSupported() {
+            button.style.cursor = 'auto';
+            button.style.left = 'calc(50% - 75px)';
+            button.style.width = '150px';
 
-			disableButton();
+            button.onmouseenter = null;
+            button.onmouseleave = null;
 
-			button.textContent = 'AR NOT SUPPORTED';
+            button.onclick = null;
 
-		}
+        }
 
-		function stylizeElement( element ) {
+        function showARNotSupported() {
 
-			element.style.position = 'absolute';
-			element.style.bottom = '20px';
-			element.style.padding = '12px 6px';
-			element.style.border = '1px solid #fff';
-			element.style.borderRadius = '4px';
-			element.style.background = 'rgba(0,0,0,0.1)';
-			element.style.color = '#fff';
-			element.style.font = 'normal 13px sans-serif';
-			element.style.textAlign = 'center';
-			element.style.opacity = '0.5';
-			element.style.outline = 'none';
-			element.style.zIndex = '999';
+            disableButton();
 
-		}
+            button.textContent = 'AR NOT SUPPORTED';
 
-		if ( 'xr' in navigator ) {
+        }
 
-			button.id = 'ARButton';
-			button.style.display = 'none';
+        function stylizeElement(element) {
 
-			stylizeElement( button );
+            element.style.position = 'absolute';
+            element.style.bottom = '20px';
+            element.style.padding = '12px 6px';
+            element.style.border = '1px solid #fff';
+            element.style.borderRadius = '4px';
+            element.style.background = 'rgba(0,0,0,0.1)';
+            element.style.color = '#fff';
+            element.style.font = 'normal 13px sans-serif';
+            element.style.textAlign = 'center';
+            element.style.opacity = '0.5';
+            element.style.outline = 'none';
+            element.style.zIndex = '999';
 
-			navigator.xr.isSessionSupported( 'immersive-ar' ).then( function ( supported ) {
+        }
 
-				supported ? showStartAR() : showARNotSupported();
+        if ('xr' in navigator) {
 
-			} ).catch( showARNotSupported );
+            button.id = 'ARButton';
+            button.style.display = 'none';
 
-			return button;
+            stylizeElement(button);
 
-		} else {
+            navigator.xr.isSessionSupported('immersive-ar').then(function (supported) {
 
-			const message = document.createElement( 'a' );
+                supported ? showStartAR() : showARNotSupported();
 
-			if ( window.isSecureContext === false ) {
+            }).catch(showARNotSupported);
 
-				message.href = document.location.href.replace( /^http:/, 'https:' );
-				message.innerHTML = 'WEBXR NEEDS HTTPS'; // TODO Improve message
+            return button;
 
-			} else {
+        } else {
 
-				message.href = 'https://immersiveweb.dev/';
-				message.innerHTML = 'WEBXR NOT AVAILABLE';
+            const message = document.createElement('a');
 
-			}
+            if (window.isSecureContext === false) {
 
-			message.style.left = 'calc(50% - 90px)';
-			message.style.width = '180px';
-			message.style.textDecoration = 'none';
+                message.href = document.location.href.replace(/^http:/, 'https:');
+                message.innerHTML = 'WEBXR NEEDS HTTPS'; // TODO Improve message
 
-			stylizeElement( message );
+            } else {
 
-			return message;
+                message.href = 'https://immersiveweb.dev/';
+                message.innerHTML = 'WEBXR NOT AVAILABLE';
 
-		}
+            }
 
-	}
+            message.style.left = 'calc(50% - 90px)';
+            message.style.width = '180px';
+            message.style.textDecoration = 'none';
+
+            stylizeElement(message);
+
+            return message;
+
+        }
+
+    }
 
 }
 
