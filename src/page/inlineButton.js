@@ -65,7 +65,7 @@ class ARButton {
 
                 // loadWebGLResources();
 
-                session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+                session.updateRenderState({ baseLayer: new navigator.xr.XRWebGLLayer(session, gl) });
 
             }
 
